@@ -13,7 +13,8 @@ using namespace std;
 
 
 
-int main (int argc, char *argv[]) {
+int main (int argc, char *argv[]) 
+{
 	int id;
 	int num_processes;
 	double wall_time; // MPI time
@@ -27,7 +28,8 @@ int main (int argc, char *argv[]) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &id);
 	
 	// Loops over the list of books
-	for(string file: file_names) {
+	for(string file: file_names) 
+	{
 		string input_file_name = file + ".txt";
     	string output_file_name = file + "_results.csv";
 		
@@ -39,6 +41,7 @@ int main (int argc, char *argv[]) {
 			wall_time = MPI_Wtime() - wall_time;
 			cout << "File: " << file << "  Vocab size: " << vocab_size << "  Word count: " << tot_word_count 
 			     << "  Time: " << wall_time << endl;
+		}
 	}
 	
 	MPI_Finalize();

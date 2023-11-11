@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <cmath>
 #include <string>
 #include <vector>
@@ -14,12 +15,12 @@ using namespace std;
 // Loads the word dict
 void load_vocab(string file_name, map<string, long long int> &word_dict, long long int &vocab_size) {
 	ifstream in(file_name);
-    
-    if (!in)
+    cout << "Trying to read: " << file_name<< "\n";
+    if (!in){
         cerr << "Couldn't read file: " << file_name << "\n";
-	
+	}
 	string line, val; // store lines from the file and words within each line
-	
+	/*
 	// Reads file line by line
 	while(getline(in, line) && point_number < size) {
 		stringstream ss(line);
@@ -36,8 +37,10 @@ void load_vocab(string file_name, map<string, long long int> &word_dict, long lo
 			if(word_dict.count(word) == 0)
 				vocab_size++;
 		}
-		*/
+		
     }
+	
+    */
 }
 
 // Counts words in the current book
@@ -50,8 +53,8 @@ void process_book(string file_name, map<string, long long int> &word_dict, long 
 	string line, val; // store lines from the file and words within each line
 	
 	// Reads file line by line
-	while(getline(in, line) && point_number < size) {
-		stringstream ss(line);
+	//while(getline(in, line) && point_number < size) {
+		//stringstream ss(line);
 		
 		// Splits each line by spaces
 		/*
@@ -62,8 +65,10 @@ void process_book(string file_name, map<string, long long int> &word_dict, long 
 				word_dict[word] += 1;
 		}		
 		*/
-	}
+	//}
 }
+
+// Ejecutar con ./bag_words_ser.exe 0_shakespeare_the_merchant_of_venice 1_shakespeare_romeo_juliet 2_shakespeare_hamlet 3_dickens_a_christmas_carol 4_dickens_oliver_twist 5_dickens_a_tale_of_two_cities
 
 int main (int argc, char *argv[]) {
 	map<string, long long int> word_dict;
@@ -74,7 +79,6 @@ int main (int argc, char *argv[]) {
 	// Loops over the list of books
 	for(string file: file_names) {
 		auto start = chrono::high_resolution_clock::now();
-		//cout << file << endl;
 		string input_file_name = file + ".txt";
     	string output_file_name = file + "_results.csv";
 		
