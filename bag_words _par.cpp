@@ -20,7 +20,7 @@ int main (int argc, char *argv[]) {
 	map<string, long long int> word_dict;
 	long long int tot_word_count = 0; // Total number of words
 	long long int vocab_size = 0; // Number of unique words
-	vector<string> const file_names{ argv, argv + argc }; // Stores cmd line input in a vector
+	vector<string> const file_names{ argv + 1, argv + argc }; // Stores cmd line input in a vector
 	
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &num_processes);

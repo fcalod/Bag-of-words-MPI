@@ -23,7 +23,7 @@ void load_vocab(string file_name, map<string, long long int> &word_dict, long lo
 	// Reads file line by line
 	while(getline(in, line) && point_number < size) {
 		stringstream ss(line);
-
+		
 		// Splits each line by spaces
 		/*
 		while() {
@@ -33,7 +33,7 @@ void load_vocab(string file_name, map<string, long long int> &word_dict, long lo
 			
 			
 
-			if()
+			if(word_dict.count(word) == 0)
 				vocab_size++;
 		}
 		*/
@@ -69,7 +69,7 @@ int main (int argc, char *argv[]) {
 	map<string, long long int> word_dict;
 	long long int tot_word_count = 0; // Total number of words
 	long long int vocab_size = 0; // Number of unique words
-	vector<string> const file_names{ argv, argv + argc }; // Stores cmd line input in a vector
+	vector<string> const file_names{ argv + 1, argv + argc }; // Stores cmd line input in a vector
 	
 	// Loops over the list of books
 	for(string file: file_names) {
