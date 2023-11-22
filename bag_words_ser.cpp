@@ -107,6 +107,7 @@ int main (int argc, char *argv[]) {
 	int vocab_size_per_book[argc-1]; // Unique words per book
 	vector<string> const file_names{ argv + 1, argv + argc }; // Stores cmd line input in a vector
 	int book_indx = 0;
+	double total_time = 0;
 	double start, end;
 	
 	load_vocab("vocab.csv", vocab);
@@ -126,12 +127,14 @@ int main (int argc, char *argv[]) {
 		cout << "File: " << file << "  Vocab size: " << vocab_size_per_book[book_indx] 
 			 << "  Word count: " << tot_word_count << "  Time: " << (float)duration.count()/1000000 << "s" << endl;
 		
+		total_time += (float)duration.count()/1000000;
+		
 		// vocab_size_per_book[book_indx] = ;
 		book_indx++;
 		
 		// Resets variables
 		for(auto const& [word, count] : vocab) {
-			cout << word << ": " << vocab[word] << "\n";
+			//cout << word << ": " << vocab[word] << "\n";
 			vocab[word] = 0;
 		}
 		//for(int i = 0; i < ; i++)
@@ -139,6 +142,8 @@ int main (int argc, char *argv[]) {
 		
 		tot_word_count = 0;
 	}
+	
+	cout << "\nTotal time: " << total_time << "s" << endl;
 	
 	return 0;
 }
