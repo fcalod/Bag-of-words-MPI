@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <chrono>
+#include "utils.cpp"
 
 using namespace std;
 
@@ -13,70 +14,6 @@ using namespace std;
 // ======== SERIAL VERSION ==========
 // ==================================
 
-// Probablemente innecesario
-/*
-// Loads vocab size across all books
-int load_vocab_size(string file_name) {
-	ifstream in(file_name);
-    
-    if (!in)
-        cerr << "Couldn't read file" << file_name << "\n";
-	
-	string line;
-	getline(in, line);
-	return stoi(line);
-}*/
-
-// Loads the word map
-void load_vocab(string file_name, map<string, int> vocab) {
-	ifstream in(file_name);
-	cout << "Trying to read: " << file_name<< "\n";
-    
-    if (!in)
-        cerr << "Couldn't read file: " << file_name << "\n";
-	
-	string line, val; // store lines from the file and words within each line
-	
-	// Only reads the header
-	getline(in, line);
-	stringstream ss(line);
-	
-	// Splits the line by commas and reads each value
-	while(!ss.eof()) {
-		getline(ss, val, ',');
-		string word = val;
-		vocab[word] = 0;
-	}
-}
-
-// Writes output to file
-void save_results(string out_file_name, map<string, int>& vocab, int& vocab_size, int& tot_word_count) {
-	ofstream out;
-	out.open(out_file_name);
-	out << "";
-	vocab_size = 0;
-	
-	// Saves headers (words found)
-	for(auto const& [word, count] : vocab) {
-		if(count > 0)
-			out << word << ",";
-		
-		tot_word_count += count;
-		vocab_size++;
-	}
-	
-	out << "\n";
-	out << "0,";
-	
-	// Saves word counts
-	for(auto const& [word, count] : vocab)
-		if(count > 0)
-			out << count << "," ;
-	
-	out << "\n";
-	out.close();
-}
-	
 // Counts words in the current book
 void process_book(string in_file_name, string out_file_name, map<string, int>& vocab, int &tot_word_count) {
 	ifstream in(in_file_name);
@@ -99,8 +36,9 @@ void process_book(string in_file_name, string out_file_name, map<string, int>& v
 	}
 }
 
-// Ejecutar con ./bag_words_ser 0_shakespeare_the_merchant_of_venice 1_shakespeare_romeo_juliet 2_shakespeare_hamlet 3_dickens_a_christmas_carol 4_dickens_oliver_twist 5_dickens_a_tale_of_two_cities
-// Ejecutar con .bag_words_ser 6_test para probar
+// Ejecutar con ./bag_words_ser 0_shakespeare_the_merchant_of_venice 1_shakespeare_romeo_juliet 2_shakespeare_hamlet 3_dickens_a_christmas_carol 4_dickens_oliver_twist 5_dickens_a_tale_of_two_cities vocab.csv
+
+// Ejecutar con .bag_words_ser 6_test vocab.csv para probar
 
 int main (int argc, char *argv[]) {
 	map <string, int> vocab; // Word counts for current book 
@@ -112,6 +50,8 @@ int main (int argc, char *argv[]) {
 	double total_time = 0;
 	double start, end;
 	
+	string vocab_file = argv[argc-1];
+	//load_vocab("vocab_file", vocab);
 	load_vocab("vocab.csv", vocab);
 	
 	// Loops over the list of books
