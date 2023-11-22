@@ -48,19 +48,25 @@ void load_vocab(string file_name, map<string, int> vocab) {
 }
 
 // Writes output to file
-void save_results(string out_file_name, map<string, int>& vocab) {
+void save_results(string out_file_name, map<string, int>& vocab, int& vocab_size, int& tot_word_count) {
 	ofstream out;
 	out.open(out_file_name);
-	
 	out << "";
+	vocab_size = 0;
 	
-	for(auto const& [word, count] : vocab)
+	// Saves headers (words found)
+	for(auto const& [word, count] : vocab) {
 		if(count > 0)
 			out << word << ",";
+		
+		tot_word_count += count;
+		vocab_size++;
+	}
 	
 	out << "\n";
 	out << "0,";
 	
+	// Saves word counts
 	for(auto const& [word, count] : vocab)
 		if(count > 0)
 			out << count << "," ;
@@ -113,7 +119,7 @@ int main (int argc, char *argv[]) {
 		
 		// Counts words from the current book
 		process_book(in_file_name, out_file_name, vocab_size, vocab, tot_word_count);
-		save_results(out_file_name, vocab);
+		save_results(out_file_name, vocab, vocab_size_per_book[book_indx], tot_word_count);
 		
 		auto end = chrono::high_resolution_clock::now();
 		auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
