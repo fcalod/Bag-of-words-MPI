@@ -13,6 +13,8 @@ using namespace std;
 // ======== SERIAL VERSION ==========
 // ==================================
 
+// Probablemente innecesario
+/*
 // Loads vocab size across all books
 int load_vocab_size(string file_name) {
 	ifstream in(file_name);
@@ -23,7 +25,7 @@ int load_vocab_size(string file_name) {
 	string line;
 	getline(in, line);
 	return stoi(line);
-}
+}*/
 
 // Loads the word map
 void load_vocab(string file_name, map<string, int> vocab) {
@@ -76,7 +78,7 @@ void save_results(string out_file_name, map<string, int>& vocab, int& vocab_size
 }
 	
 // Counts words in the current book
-void process_book(string in_file_name, string out_file_name, int vocab_size, map<string, int>& vocab, int &tot_word_count) {
+void process_book(string in_file_name, string out_file_name, map<string, int>& vocab, int &tot_word_count) {
 	ifstream in(in_file_name);
     
     if (!in)
@@ -102,10 +104,10 @@ void process_book(string in_file_name, string out_file_name, int vocab_size, map
 
 int main (int argc, char *argv[]) {
 	map <string, int> vocab; // Word counts for current book 
-	int vocab_size = load_vocab_size("vocab_size.csv"); // Number of unique words
+	//int vocab_size = load_vocab_size("vocab_size.csv"); // Number of unique words
 	int tot_word_count = 0; // Total number of words
 	int vocab_size_per_book[argc-1]; // Unique words per book
-	vector<string> const file_names{ argv + 1, argv + argc }; // Stores cmd line input in a vector
+	vector<string> const file_names{ argv + 1, argv + argc - 1 }; // Stores cmd line input in a vector
 	int book_indx = 0;
 	double total_time = 0;
 	double start, end;
@@ -119,7 +121,7 @@ int main (int argc, char *argv[]) {
     	string out_file_name = "results/" + file + "_results.csv";
 		
 		// Counts words from the current book
-		process_book(in_file_name, out_file_name, vocab_size, vocab, tot_word_count);
+		process_book(in_file_name, out_file_name, vocab, tot_word_count);
 		save_results(out_file_name, vocab, vocab_size_per_book[book_indx], tot_word_count);
 		
 		auto end = chrono::high_resolution_clock::now();

@@ -11,6 +11,8 @@ using namespace std;
 // ======= PARALLEL VERSION =========
 // ==================================
 
+// Probablemente innecesario
+/*
 // Loads vocab size across all books
 int load_vocab_size(string file_name) {
 	ifstream in(file_name);
@@ -21,7 +23,7 @@ int load_vocab_size(string file_name) {
 	string line;
 	getline(in, line);
 	return stoi(line);
-}
+}*/
 
 // Loads the word map
 void load_vocab(string file_name, map<string, int> vocab) {
@@ -74,23 +76,26 @@ void save_results(string out_file_name, map<string, int>& vocab, int& vocab_size
 }
 
 
-int main (int argc, char *argv[]) 
-{
+int main (int argc, char *argv[]) {
 	int id;
-	int num_processes;
+	int num_proc = argv[argc-1]; // Last input
 	double wall_time; // MPI time
-	map<string, long long int> word_dict;
-	long long int tot_word_count = 0; // Total number of words
-	long long int vocab_size = 0; // Number of unique words
-	vector<string> const file_names{ argv + 1, argv + argc }; // Stores cmd line input in a vector
+	
+	map <string, int> vocab; // Word counts for current book 
+	int tot_word_count = 0; // Total number of words
+	int vocab_size = 0; // Number of unique words
+	vector<string> const file_names{ argv + 1, argv + argc - 2 }; // Stores cmd line input in a vector
+	int book_indx = 0;
+	double total_time = 0;
 	
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &num_processes);
 	MPI_Comm_rank(MPI_COMM_WORLD, &id);
 	
+	load_vocab("vocab.csv", vocab);
+	
 	// Loops over the list of books
-	for(string file: file_names) 
-	{
+	for(string file: file_names) {
 		string input_file_name = file + ".txt";
     	string output_file_name = file + "_results.csv";
 		
@@ -106,6 +111,8 @@ int main (int argc, char *argv[])
 	}
 	
 	MPI_Finalize();
+	cout << "\nTotal time: " << total_time << "s" << endl;
+	
 	return 0;
 }
 

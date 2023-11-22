@@ -44,8 +44,10 @@ df.to_csv("vocab.csv")
 # Tamaño del vocabulario
 print(len(vocabulario), vocabulario)
 
+'''
 # Escribe el tamaño del vocabulario
 with open("vocab_size.csv", 'w') as file:
 	writer = csv.writer(file)
 	writer.writerow([len(vocabulario)])
+'''
 
