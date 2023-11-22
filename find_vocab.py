@@ -1,3 +1,4 @@
+import csv
 import pandas as pd
 import numpy as np
 import re
@@ -5,12 +6,12 @@ import nltk
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import CountVectorizer
 
-etiquetas = ["shakespeare_the_merchant_of_venice",
-             "shakespeare_romeo_juliet",
-             "shakespeare_hamlet",
-             "dickens_a_christmas_carol",
-             "dickens_oliver_twist",
-             "dickens_a_tale_of_two_cities"]
+etiquetas = ["0_shakespeare_the_merchant_of_venice",
+             "1_shakespeare_romeo_juliet",
+             "2_shakespeare_hamlet",
+             "3_dickens_a_christmas_carol",
+             "4_dickens_oliver_twist",
+             "5_dickens_a_tale_of_two_cities"]
 corpus = []
 
 for etiqueta in etiquetas:
@@ -42,4 +43,9 @@ df.to_csv("vocab.csv")
 
 # Tamaño del vocabulario
 print(len(vocabulario), vocabulario)
+
+# Escribe el tamaño del vocabulario
+with open("vocab_size.csv", 'w') as file:
+	writer = csv.writer(file)
+	writer.writerow([len(vocabulario)])
 
