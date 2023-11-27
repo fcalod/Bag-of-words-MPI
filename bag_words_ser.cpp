@@ -51,8 +51,8 @@ int main (int argc, char *argv[]) {
 	double start, end;
 	
 	string vocab_file = argv[argc-1];
-	//load_vocab("vocab_file", vocab);
-	load_vocab("vocab.csv", vocab);
+	load_vocab("vocab_file", vocab);
+	//load_vocab("vocab.csv", vocab);
 	
 	// Loops over the list of books
 	for(string file: file_names) {

@@ -52,6 +52,7 @@ int main (int argc, char *argv[]) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &process_id);
 	MPI_Get_processor_name(host_name, &name_length);
 
+
 	//Program Variables Init
 	map <string, int> vocab; // Word counts for current book 
 	int tot_word_count = 0; // Total number of words
@@ -60,41 +61,38 @@ int main (int argc, char *argv[]) {
 	int book_indx = 0;
 	double total_time = 0;
 	double start, end;
-	load_vocab("vocab.csv", vocab);
 	
-	string vocab_file = argv[argc-1];
-	load_vocab("vocab.csv", vocab);
-	
-	// Loops over the list of books
-	for(string file: file_names) {
-		auto start = chrono::high_resolution_clock::now();
-		string in_file_name = "sample_data/" + file + ".txt";
-    	string out_file_name = "results/" + file + "_results.csv";
+	// Root Tasks
+	if (process_id == 0){
+		// Load Vocabulary
+		string vocab_file = argv[argc-1];
+		load_vocab("vocab_file", vocab);
+		////load_vocab("vocab.csv", vocab);
 		
-		// Counts words from the current book
-		process_book(in_file_name, out_file_name, vocab, tot_word_count);
-		save_results(out_file_name, vocab, vocab_size_per_book[book_indx], tot_word_count);
-		
-		auto end = chrono::high_resolution_clock::now();
-		auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-		cout << "File: " << file << "  Vocab size: " << vocab_size_per_book[book_indx] 
-			 << "  Word count: " << tot_word_count << "  Time: " << (float)duration.count()/1000000 << "s" << endl;
-		
-		total_time += (float)duration.count()/1000000;
-		
-		book_indx++;
-		
-		// Resets variables
-		for(auto const& [word, count] : vocab) {
-			vocab[word] = 0;
-		}
+		// Start Timer
+		 wall_time = MPI_Wtime();
 
-		tot_word_count = 0;
 	}
 	
-	MPI_Finalize();
-	cout << "\nTotal time: " << total_time << "s" << endl;
+	string in_file_name = "sample_data/" + file_names[process_id]  + ".txt";
+    string out_file_name = "results/" + file_names[process_id] + "_resultsPar.csv";
+		
+	// Counts words from the current book
+	process_book(in_file_name, out_file_name, vocab, tot_word_count);
+	save_results(out_file_name, vocab, vocab_size_per_book[process_id], tot_word_count);
+
+	cout << "File: " << file_names[process_id] << "  Vocab size: " << vocab_size_per_book[process_id] 
+		 << "  Word count: " << tot_word_count << endl;
+		 //"  Time: " << (float)duration.count()/1000000 << "s" << endl;
 	
+
+ if (process_id == 0) {
+      wall_time = MPI_Wtime() - wall_time;
+      cout <<  wall_time << endl;
+    }
+
+	MPI_Finalize();
+
 	return 0;
 }
 

@@ -68,4 +68,3 @@ void save_results(string out_file_name, map<string, int>& vocab, int& vocab_size
 	out << "\n";
 	out.close();
 }
-
