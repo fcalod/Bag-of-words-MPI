@@ -6,35 +6,13 @@
 #include <fstream>
 #include <sstream>
 #include <chrono>
-//#include "utils.cpp"
+#include "utils.cpp"
 
 using namespace std;
 
 // ==================================
 // ======== SERIAL VERSION ==========
 // ==================================
-
-// Loads the word map
-void load_vocab(string file_name, map<string, int>& vocab) {
-	ifstream in(file_name);
-	cout << "Trying to read: " << file_name<< "\n";
-    
-    if (!in)
-        cerr << "Couldn't read file: " << file_name << "\n";
-	
-	string line, val; // store lines from the file and words within each line
-	
-	// Only reads the header
-	getline(in, line);
-	stringstream ss(line);
-	
-	// Splits the line by commas and reads each value
-	while(!ss.eof()) {
-		getline(ss, val, ',');
-		string word = val;
-		vocab[word] = 0;
-	}
-}
 
 // Counts words in the current book
 void process_book(string in_file_name, map<string, int>& vocab, int &tot_word_count) {
@@ -61,18 +39,6 @@ void process_book(string in_file_name, map<string, int>& vocab, int &tot_word_co
 	in.close();
 }
 
-void write_headers(string out_file_name, map<string, int>& vocab) {
-	ofstream out;
-	out.open(out_file_name);
-	
-	// Writes headers
-	for(auto const& [word, count] : vocab)
-		out << word << ",";
-	
-	out << "\n";
-	out.close();
-}
-
 // Writes output to file
 void save_results(string out_file_name, map<string, int>& vocab, int& vocab_size_per_book) {
 	ofstream out;
@@ -97,7 +63,7 @@ void save_results(string out_file_name, map<string, int>& vocab, int& vocab_size
  
 int main (int argc, char *argv[]) {
 	map <string, int> vocab; // Word counts for current book 
-	int tot_word_count = 0; // Total number of words
+	int tot_word_count = 0; // Total number of words per book
 	int vocab_size_per_book[argc - 3]; // Unique words per book
 	vector<string> const file_names{ argv + 1, argv + argc - 2 }; // Stores cmd line input in a vector
 	int book_indx = 0;
