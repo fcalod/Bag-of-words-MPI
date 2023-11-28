@@ -60,7 +60,11 @@ void save_results(string out_file_name, int* word_counts, int& vocab_size) {
 	out.close();
 }
 
+// LINUX //
 // Ejecutar con mpiexec -n 6 --use-hwthread-cpus bag_words_par 0_shakespeare_the_merchant_of_venice 1_shakespeare_romeo_juliet 2_shakespeare_hamlet 3_dickens_a_christmas_carol 4_dickens_oliver_twist 5_dickens_a_tale_of_two_cities vocab.csv 15164
+
+//Windows //
+// Ejecutar con mpiexec -n 6 bag_words_par 0_shakespeare_the_merchant_of_venice 1_shakespeare_romeo_juliet 2_shakespeare_hamlet 3_dickens_a_christmas_carol 4_dickens_oliver_twist 5_dickens_a_tale_of_two_cities vocab.csv 15164
 
 int main (int argc, char *argv[]) {
 	// MPI Init
@@ -70,6 +74,8 @@ int main (int argc, char *argv[]) {
 	int name_length = 0;
 	char host_name[MPI_MAX_PROCESSOR_NAME];
 	double wall_time; // MPI time
+	MPI_Request request[2];
+   //MPI_Status status[4];
 	
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &num_processes);
@@ -94,6 +100,7 @@ int main (int argc, char *argv[]) {
 	if (process_id == 0){
 		// Load Vocabulary
 		string vocab_file = argv[argc - 2];
+		cout << vocab_file;
 		load_vocab(vocab_file, vocab);
 		load_vocab_indx(vocab, vocab_indx);
 		
@@ -107,16 +114,16 @@ int main (int argc, char *argv[]) {
 	// Counts words from the current book
 	//cout << "Soy proc " << process_id << " size_per_book " << vocab_size_per_book << endl;
 	process_book(in_file_name, vocab_indx, word_counts, tot_words_per_book);
+	save_results(out_file_name, &word_counts[process_id], vocab_size);
 	cout << "File: " << file_names[process_id] << "  Vocab size: " << vocab_size_per_book
 		 << "  Word count: " << tot_words_per_book << endl;
 		 //"  Time: " << (float)duration.count()/1000000 << "s" << endl;
 	
 	// Sends the results to master thread
 	if(process_id != 0) {
-		for(int id = 1; id < num_processes; id++) {
-			MPI_Isend(&process_id, 1, MPI_INT, id, 101, MPI_COMM_WORLD, &request[2]);
-
-		}
+		//for(int id = 1; id < num_processes; id++) {
+			MPI_Isend(&word_counts[process_id], 1, MPI_INT, 0, 101, MPI_COMM_WORLD, &request[0]); 
+		//}
 	}
 	
 	// Writes results to file
@@ -125,7 +132,7 @@ int main (int argc, char *argv[]) {
 		cout <<  wall_time << endl;
 		
 		for(int id = 1; id < num_processes; id++) {
-			MPI_Irecv(&messages[1], 1, MPI_INT, right, 101, MPI_COMM_WORLD, &);
+			MPI_Irecv(&word_counts[id], 1, MPI_INT, id, 101, MPI_COMM_WORLD, &request[1]);
 			save_results(out_file_name, word_counts, vocab_size);
 		}
 	}
