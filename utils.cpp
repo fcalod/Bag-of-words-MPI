@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <chrono>
+#include <map>
 
 using namespace std;
 
@@ -23,7 +24,6 @@ int load_vocab_size(string file_name) {
 void load_vocab(string file_name, map<string, int>& vocab) {
 	ifstream in(file_name);
 	cout << "Trying to read: " << file_name<< "\n";
-    
     if (!in)
         cerr << "Couldn't read file: " << file_name << "\n";
 	
@@ -39,6 +39,7 @@ void load_vocab(string file_name, map<string, int>& vocab) {
 		string word = val;
 		vocab[word] = 0;
 	}
+	cout << "Read: " << file_name<< " succesfully\n";
 }
 
 void write_headers(string out_file_name, map<string, int>& vocab) {

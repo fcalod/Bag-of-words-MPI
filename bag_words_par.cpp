@@ -1,9 +1,11 @@
 #include <mpi.h>
 #include <iostream>
 #include <cmath>
+#include <cstring>
 #include <string>
 #include <vector>
 #include <map>
+
 #include "utils.cpp"
 
 using namespace std;
@@ -23,7 +25,9 @@ void load_vocab_indx(map<string, int> &vocab, map<string, int> &vocab_indx) {
 }
 
 // Counts words in the current book
-void process_book(string in_file_name, map<string, int>& vocab_indx, int* word_counts, int &tot_words_per_book) {
+void process_book(string in_file_name, map<string, int>& vocab_indx, int* word_counts,
+	int &tot_words_per_book, int &vocab_size_per_book) 
+	{
 	ifstream in(in_file_name);
     
     if (!in)
@@ -36,14 +40,15 @@ void process_book(string in_file_name, map<string, int>& vocab_indx, int* word_c
 		stringstream ss(line);
 		
 		// Splits each line by spaces
-		while(!ss.eof()) {
+		while(ss.good()) {
 			getline(ss, val, ',');
 			string word = val;
 			word_counts[vocab_indx[word]]++; // vocab_indx maps words to their index in word_counts
+			if (word_counts[vocab_indx[word]] == 1 ) vocab_size_per_book++; // if new word, increase vocabulary of the book
 			tot_words_per_book++; // Counts words, with repetition
 		}		
+		
 	}
-	
 	in.close();
 }
 
@@ -75,7 +80,7 @@ int main (int argc, char *argv[]) {
 	char host_name[MPI_MAX_PROCESSOR_NAME];
 	double wall_time; // MPI time
 	MPI_Request request[2];
-   //MPI_Status status[4];
+    MPI_Status status[2];
 	
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &num_processes);
@@ -98,12 +103,6 @@ int main (int argc, char *argv[]) {
 	
 	// Master thread Tasks
 	if (process_id == 0){
-		// Load Vocabulary
-		string vocab_file = argv[argc - 2];
-		cout << vocab_file;
-		load_vocab(vocab_file, vocab);
-		load_vocab_indx(vocab, vocab_indx);
-		
 		// Start Timer
 		wall_time = MPI_Wtime();
 		
@@ -111,32 +110,40 @@ int main (int argc, char *argv[]) {
 		write_headers(out_file_name, vocab);
 	}
 	
+	// Clear word counter
+	memset(word_counts, 0, sizeof(word_counts));
+
+	// Load Vocabulary
+	string vocab_file = argv[argc - 2];
+	load_vocab(vocab_file, vocab);
+	load_vocab_indx(vocab, vocab_indx);
+		
 	// Counts words from the current book
-	//cout << "Soy proc " << process_id << " size_per_book " << vocab_size_per_book << endl;
-	process_book(in_file_name, vocab_indx, word_counts, tot_words_per_book);
+	process_book(in_file_name, vocab_indx, word_counts, tot_words_per_book,vocab_size_per_book );
 	save_results(out_file_name, &word_counts[process_id], vocab_size);
+	
 	cout << "File: " << file_names[process_id] << "  Vocab size: " << vocab_size_per_book
 		 << "  Word count: " << tot_words_per_book << endl;
-		 //"  Time: " << (float)duration.count()/1000000 << "s" << endl;
+
 	
 	// Sends the results to master thread
 	if(process_id != 0) {
 		//for(int id = 1; id < num_processes; id++) {
-			MPI_Isend(&word_counts[process_id], 1, MPI_INT, 0, 101, MPI_COMM_WORLD, &request[0]); 
+			//MPI_Isend(&word_counts[process_id], 1, MPI_INT, 0, 101, MPI_COMM_WORLD, &request[0]); 
 		//}
 	}
 	
 	// Writes results to file
 	if (process_id == 0) {
+		for(int id = 1; id < num_processes; id++) {
+			//MPI_Irecv(&word_counts[id], 1, MPI_INT, id, 101, MPI_COMM_WORLD, &request[1]);
+		}
+
 		wall_time = MPI_Wtime() - wall_time;
 		cout <<  wall_time << endl;
 		
-		for(int id = 1; id < num_processes; id++) {
-			MPI_Irecv(&word_counts[id], 1, MPI_INT, id, 101, MPI_COMM_WORLD, &request[1]);
-			save_results(out_file_name, word_counts, vocab_size);
-		}
 	}
-	
+
 	MPI_Finalize();
 	return 0;
 }

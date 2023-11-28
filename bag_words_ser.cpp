@@ -27,8 +27,8 @@ void process_book(string in_file_name, map<string, int>& vocab, int &tot_word_co
 	while(getline(in, line)) {
 		stringstream ss(line);
 		
-		// Splits each line by spaces
-		while(!ss.eof()) {
+		// Splits each line by spaces  !ss.eof()
+		while(ss.good()) {
 			getline(ss, val, ',');
 			string word = val;
 			vocab[word]++;
