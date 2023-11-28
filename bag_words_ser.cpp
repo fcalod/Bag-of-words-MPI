@@ -18,7 +18,7 @@ using namespace std;
 void process_book(string in_file_name, map<string, int>& vocab, int &tot_word_count) {
 	ifstream in(in_file_name);
     
-    if (!in)
+    if(!in)
         cerr << "Couldn't read file: " << in_file_name << "\n";
 	
 	string line, val; // store lines from the file and words within each line
@@ -27,11 +27,16 @@ void process_book(string in_file_name, map<string, int>& vocab, int &tot_word_co
 	while(getline(in, line)) {
 		stringstream ss(line);
 		
-		// Splits each line by spaces  !ss.eof()
-		while(ss.good()) {
+		// Splits each line by commas  
+		while(ss.good()) {//!ss.eof()
 			getline(ss, val, ',');
 			string word = val;
-			vocab[word]++;
+			
+			// Checks if the word is in the vocab
+			// (maps don't throw errors when accessing non-existant keys)
+			if(vocab.count(word) > 0) 
+				vocab[word]++;
+			
 			tot_word_count++;
 		}		
 	}
@@ -44,6 +49,8 @@ void save_results(string out_file_name, map<string, int>& vocab, int& vocab_size
 	ofstream out;
 	out.open(out_file_name, ios_base::app); // Append mode
 	vocab_size_per_book = 0;
+	
+	int counter = 0;
 	
 	// Writes word counts
 	for(auto const& [word, count] : vocab) {
@@ -72,7 +79,7 @@ int main (int argc, char *argv[]) {
 	
 	string vocab_file = argv[argc - 2];
 	load_vocab(vocab_file, vocab);
-	string out_file_name = "results/results_ser.csv";
+	string out_file_name = "results/BagOfWords_Serial.csv";
 	
 	write_headers(out_file_name, vocab);
 	
@@ -87,17 +94,15 @@ int main (int argc, char *argv[]) {
 		
 		auto end = chrono::high_resolution_clock::now();
 		auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-		cout << "File: " << file << "    Vocab size: " << vocab_size_per_book[book_indx] 
+		cout << "Book: " << book_indx << "    Vocab size: " << vocab_size_per_book[book_indx] 
 			 << "  Word count: " << tot_word_count << "  Time: " << (float)duration.count()/1000000 << "s" << endl;
 		
 		total_time += (float)duration.count()/1000000;
 		book_indx++;
 		
 		// Resets variables
-		for(auto const& [word, count] : vocab) {
-			//cout << word << ": " << vocab[word] << "\n";
+		for(auto const& [word, count] : vocab)
 			vocab[word] = 0;
-		}
 		
 		tot_word_count = 0;
 	}

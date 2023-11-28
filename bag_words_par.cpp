@@ -26,8 +26,7 @@ void load_vocab_indx(map<string, int> &vocab, map<string, int> &vocab_indx) {
 
 // Counts words in the current book
 void process_book(string in_file_name, map<string, int>& vocab_indx, int* word_counts,
-	int &tot_words_per_book, int &vocab_size_per_book) 
-	{
+				  int &tot_words_per_book, int &vocab_size_per_book) {
 	ifstream in(in_file_name);
     
     if (!in)
@@ -35,16 +34,21 @@ void process_book(string in_file_name, map<string, int>& vocab_indx, int* word_c
 	
 	string line, val; // stores lines from the file and words within each line
 	
+	cout << in_file_name << "\n";
+	
 	// Reads file line by line
 	while(getline(in, line)) {
 		stringstream ss(line);
 		
-		// Splits each line by spaces
+		// Splits each line by commas
 		while(ss.good()) {
 			getline(ss, val, ',');
 			string word = val;
 			word_counts[vocab_indx[word]]++; // vocab_indx maps words to their index in word_counts
-			if (word_counts[vocab_indx[word]] == 1 ) vocab_size_per_book++; // if new word, increase vocabulary of the book
+			
+			if(word_counts[vocab_indx[word]] == 1) 
+				vocab_size_per_book++; // if new word, increase vocabulary of the book
+			
 			tot_words_per_book++; // Counts words, with repetition
 		}			
 	}
@@ -85,10 +89,10 @@ int main (int argc, char *argv[]) {
 	MPI_Get_processor_name(host_name, &name_length);
 	
 	//Program Variables Init
-	map<string, int> vocab; // Word counts for current book
+	map<string, int> vocab; // Used to write headers
 	map<string, int> vocab_indx; // Word indices for current book
 	int vocab_size = stoi(argv[argc-1]); // Total unique words across all books
-	int word_counts[vocab_size]; // Word counts for current book
+	int word_counts[vocab_size+1]; // Word counts for current book
 	int vocab_size_per_book = 0; // Unique words per book
 	int tot_words_per_book = 0; // Total number of words per book
 	int bag_of_words[num_processes][vocab_size];
@@ -96,55 +100,58 @@ int main (int argc, char *argv[]) {
 	double total_time = 0;
 	double start, end;
 
-	int data_to_be_collected[vocab_size*num_processes];
+	int data_to_be_collected[(vocab_size+1)*num_processes];
 	
 	string in_file_name = "sample_data/" + file_names[process_id]  + ".txt";
-    string out_file_name = "results/results_par.csv";
+    string out_file_name = "results/BagOfWords_Parallel.csv";
 	
-	// Master thread Tasks
-	if (process_id == 0){
-		// Start Timer
-		wall_time = MPI_Wtime();
-		
-		// Write file headers for later 
-		write_headers(out_file_name, vocab);
-	}
-	
-	// Clear word counter
-	memset(word_counts, 0, sizeof(word_counts));
-
 	// Load Vocabulary
 	string vocab_file = argv[argc - 2];
 	load_vocab(vocab_file, vocab);
 	load_vocab_indx(vocab, vocab_indx);
-		
-	// Counts words from the current book
-	process_book(in_file_name, vocab_indx, word_counts, tot_words_per_book,vocab_size_per_book );
 	
-	cout << "File: " << file_names[process_id] << "  Vocab size: " << vocab_size_per_book
+	// Master thread Tasks
+	if(process_id == 0) {
+		// Write file headers for later 
+		write_headers(out_file_name, vocab);
+		
+		// Start Timer
+		wall_time = MPI_Wtime();
+	}
+	
+	// Initialize word counter
+	memset(word_counts, 0, sizeof(word_counts));
+	
+	// Counts words from the current book
+	process_book(in_file_name, vocab_indx, word_counts, tot_words_per_book, vocab_size_per_book);
+	cout << "Book: " << process_id << "  Vocab size: " << vocab_size_per_book
 		 << "  Word count: " << tot_words_per_book << endl;
-
+	
 	//Gathers the word count of all books
-	MPI_Gather(&word_counts, vocab_size, MPI_INT, data_to_be_collected,vocab_size , MPI_INT, 0, MPI_COMM_WORLD);
-	if (process_id == 0) {
+	MPI_Gather(&word_counts, vocab_size+1, MPI_INT, data_to_be_collected, vocab_size+1, MPI_INT, 0, MPI_COMM_WORLD);
+	
+	if(process_id == 0) {
 		// Combines word counts into one matrix
 		int k = 0;
-		for(size_t i = 0; i < num_processes; ++i)
-		{
-			for(size_t j = 0; j < vocab_size; ++j)
-			{
-				bag_of_words[i][j] = data_to_be_collected[k++];
-			}
+		
+		wall_time = MPI_Wtime() - wall_time;
+		cout << "Total time: " <<  wall_time << "s" << "\n";
+		
+		for(int i = 0; i < num_processes; i++) {
+			bag_of_words[i][0] = i; // First column accumulates garbage values
+			
+			for(int j = 1; j < vocab_size+1; j++)
+				bag_of_words[i][j] = data_to_be_collected[(vocab_size+1)*i + j];
 		}
+		
 		// Writes results to file
-		std::ofstream out("results/BagOfWords_Parallel.csv");
+		ofstream out(out_file_name, ios_base::app); // Append mode
+		
 		for (auto& row : bag_of_words) {
 			for (auto col : row)
-				out << col <<',';
+				out << col << ',';
 			out << '\n';
 		}
-		wall_time = MPI_Wtime() - wall_time;
-		cout <<  wall_time << endl;		
 	}
 	MPI_Finalize();
 	return 0;
