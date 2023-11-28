@@ -46,8 +46,7 @@ void process_book(string in_file_name, map<string, int>& vocab_indx, int* word_c
 			word_counts[vocab_indx[word]]++; // vocab_indx maps words to their index in word_counts
 			if (word_counts[vocab_indx[word]] == 1 ) vocab_size_per_book++; // if new word, increase vocabulary of the book
 			tot_words_per_book++; // Counts words, with repetition
-		}		
-		
+		}			
 	}
 	in.close();
 }
@@ -79,8 +78,6 @@ int main (int argc, char *argv[]) {
 	int name_length = 0;
 	char host_name[MPI_MAX_PROCESSOR_NAME];
 	double wall_time; // MPI time
-	MPI_Request request[2];
-    MPI_Status status[2];
 	
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &num_processes);
@@ -94,9 +91,13 @@ int main (int argc, char *argv[]) {
 	int word_counts[vocab_size]; // Word counts for current book
 	int vocab_size_per_book = 0; // Unique words per book
 	int tot_words_per_book = 0; // Total number of words per book
+	int bag_of_words[num_processes][vocab_size];
 	vector<string> const file_names{ argv + 1, argv + argc - 2 }; // Stores cmd line input in a vector
 	double total_time = 0;
 	double start, end;
+
+
+	int data_to_be_collected[vocab_size*6];
 	
 	string in_file_name = "sample_data/" + file_names[process_id]  + ".txt";
     string out_file_name = "results/results_par.csv";
@@ -120,30 +121,30 @@ int main (int argc, char *argv[]) {
 		
 	// Counts words from the current book
 	process_book(in_file_name, vocab_indx, word_counts, tot_words_per_book,vocab_size_per_book );
-	save_results(out_file_name, &word_counts[process_id], vocab_size);
 	
 	cout << "File: " << file_names[process_id] << "  Vocab size: " << vocab_size_per_book
 		 << "  Word count: " << tot_words_per_book << endl;
 
-	
-	// Sends the results to master thread
-	if(process_id != 0) {
-		//for(int id = 1; id < num_processes; id++) {
-			//MPI_Isend(&word_counts[process_id], 1, MPI_INT, 0, 101, MPI_COMM_WORLD, &request[0]); 
-		//}
-	}
-	
 	// Writes results to file
+	MPI_Gather(&word_counts, vocab_size, MPI_INT, data_to_be_collected,vocab_size , MPI_INT, 0, MPI_COMM_WORLD);
 	if (process_id == 0) {
-		for(int id = 1; id < num_processes; id++) {
-			//MPI_Irecv(&word_counts[id], 1, MPI_INT, id, 101, MPI_COMM_WORLD, &request[1]);
+		int k = 0;
+		for(size_t i = 0; i < num_processes; ++i)
+		{
+			for(size_t j = 0; j < vocab_size; ++j)
+			{
+				bag_of_words[i][j] = data_to_be_collected[k++];
+			}
 		}
-
+		std::ofstream out("results/BagOfWords_Parallel.csv");
+		for (auto& row : bag_of_words) {
+			for (auto col : row)
+				out << col <<',';
+			out << '\n';
+		}
 		wall_time = MPI_Wtime() - wall_time;
-		cout <<  wall_time << endl;
-		
+		cout <<  wall_time << endl;		
 	}
-
 	MPI_Finalize();
 	return 0;
 }
