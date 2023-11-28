@@ -39,9 +39,8 @@ void process_book(string in_file_name, map<string, int>& vocab_indx, int* word_c
 		while(!ss.eof()) {
 			getline(ss, val, ',');
 			string word = val;
-			word_counts[vocab_indx[word]]++; // 
-			tot_words_per_book++;
-			tot_word_count++; // Counts words, with repetition
+			word_counts[vocab_indx[word]]++; // vocab_indx maps words to their index in word_counts
+			tot_words_per_book++; // Counts words, with repetition
 		}		
 	}
 	
@@ -114,7 +113,7 @@ int main (int argc, char *argv[]) {
 	
 	// Sends the results to master thread
 	if(process_id != 0) {
-		for(int id = 1; id < num_processes; i++) {
+		for(int id = 1; id < num_processes; id++) {
 			MPI_Isend(&process_id, 1, MPI_INT, id, 101, MPI_COMM_WORLD, &request[2]);
 
 		}
@@ -125,7 +124,7 @@ int main (int argc, char *argv[]) {
 		wall_time = MPI_Wtime() - wall_time;
 		cout <<  wall_time << endl;
 		
-		for(int id = 1; id < num_processes; i++) {
+		for(int id = 1; id < num_processes; id++) {
 			MPI_Irecv(&messages[1], 1, MPI_INT, right, 101, MPI_COMM_WORLD, &);
 			save_results(out_file_name, word_counts, vocab_size);
 		}
