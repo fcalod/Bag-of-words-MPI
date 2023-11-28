@@ -96,8 +96,7 @@ int main (int argc, char *argv[]) {
 	double total_time = 0;
 	double start, end;
 
-
-	int data_to_be_collected[vocab_size*6];
+	int data_to_be_collected[vocab_size*num_processes];
 	
 	string in_file_name = "sample_data/" + file_names[process_id]  + ".txt";
     string out_file_name = "results/results_par.csv";
@@ -125,9 +124,10 @@ int main (int argc, char *argv[]) {
 	cout << "File: " << file_names[process_id] << "  Vocab size: " << vocab_size_per_book
 		 << "  Word count: " << tot_words_per_book << endl;
 
-	// Writes results to file
+	//Gathers the word count of all books
 	MPI_Gather(&word_counts, vocab_size, MPI_INT, data_to_be_collected,vocab_size , MPI_INT, 0, MPI_COMM_WORLD);
 	if (process_id == 0) {
+		// Combines word counts into one matrix
 		int k = 0;
 		for(size_t i = 0; i < num_processes; ++i)
 		{
@@ -136,6 +136,7 @@ int main (int argc, char *argv[]) {
 				bag_of_words[i][j] = data_to_be_collected[k++];
 			}
 		}
+		// Writes results to file
 		std::ofstream out("results/BagOfWords_Parallel.csv");
 		for (auto& row : bag_of_words) {
 			for (auto col : row)
